@@ -1,12 +1,14 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React, { useState } from 'react';
-import cn from 'classnames';
 
 import './App.scss';
 
 import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
+import { Products } from './components/Products';
+import { Users } from './components/Users';
+import { Search } from './components/Search';
 
 const getCategoryById = id => {
   return categoriesFromServer.find(category => category.id === id);
@@ -27,17 +29,28 @@ const products = productsFromServer.map(product => {
   };
 });
 
-const getFilteredProducts = (allProducts, activeUserId) => {
+const getFilteredProducts = (allProducts, activeUserId, query) => {
+  let filtered = allProducts;
+
   if (activeUserId) {
-    return allProducts.filter(product => product.user.id === activeUserId);
+    filtered = filtered.filter(product => product.user.id === activeUserId);
   }
 
-  return allProducts;
+  if (query) {
+    const trimmedQuery = query.trim().toLowerCase();
+
+    filtered = filtered.filter(product => {
+      return product.name.toLowerCase().includes(trimmedQuery);
+    });
+  }
+
+  return filtered;
 };
 
 export const App = () => {
   const [activeUserId, setActiveUserId] = useState('');
-  const visibleProducts = getFilteredProducts(products, activeUserId);
+  const [query, setQuery] = useState('');
+  const visibleProducts = getFilteredProducts(products, activeUserId, query);
 
   return (
     <div className="section">
@@ -49,53 +62,14 @@ export const App = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
-              <a
-                data-cy="FilterAllUsers"
-                href="#/"
-                onClick={() => setActiveUserId('')}
-                className={cn({ 'is-active': activeUserId === '' })}
-              >
-                All
-              </a>
-
-              {usersFromServer.map(user => {
-                return (
-                  <a
-                    data-cy="FilterUser"
-                    href="#/"
-                    key={user.id}
-                    onClick={() => setActiveUserId(user.id)}
-                    className={cn({ 'is-active': activeUserId === user.id })}
-                  >
-                    {user.name}
-                  </a>
-                );
-              })}
+              <Users
+                activeUserId={activeUserId}
+                setActiveUserId={setActiveUserId}
+              />
             </p>
 
             <div className="panel-block">
-              <p className="control has-icons-left has-icons-right">
-                <input
-                  data-cy="SearchField"
-                  type="text"
-                  className="input"
-                  placeholder="Search"
-                  value="qwe"
-                />
-
-                <span className="icon is-left">
-                  <i className="fas fa-search" aria-hidden="true" />
-                </span>
-
-                <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
-              </p>
+              <Search query={query} setQuery={setQuery} />
             </div>
 
             <div className="panel-block is-flex-wrap-wrap">
@@ -201,30 +175,7 @@ export const App = () => {
             </thead>
 
             <tbody>
-              {visibleProducts.map(product => {
-                return (
-                  <tr data-cy="Product" key={product.id}>
-                    <td className="has-text-weight-bold" data-cy="ProductId">
-                      {product.id}
-                    </td>
-
-                    <td data-cy="ProductName">{product.name}</td>
-                    <td data-cy="ProductCategory">
-                      {`${product.category.icon} - ${product.category.title}`}
-                    </td>
-
-                    <td
-                      data-cy="ProductUser"
-                      className={cn({
-                        'has-text-link': product.user.sex === 'm',
-                        'has-text-danger': product.user.sex === 'f',
-                      })}
-                    >
-                      {product.user.name}
-                    </td>
-                  </tr>
-                );
-              })}
+              <Products visibleProducts={visibleProducts} />
             </tbody>
           </table>
         </div>
