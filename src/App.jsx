@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React, { useState } from 'react';
+import cn from 'classnames';
 
 import './App.scss';
 
@@ -109,7 +110,13 @@ export const App = () => {
               <a
                 data-cy="ResetAllButton"
                 href="#/"
-                className="button is-link is-outlined is-fullwidth"
+                className={cn('button', 'is-link', 'is-fullwidth', {
+                  'is-outlined': query === '' && activeUserId === '',
+                })}
+                onClick={() => {
+                  setQuery('');
+                  setActiveUserId('');
+                }}
               >
                 Reset all filters
               </a>
@@ -118,9 +125,11 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          <p data-cy="NoMatchingMessage">
-            No products matching selected criteria
-          </p>
+          {visibleProducts.length === 0 && (
+            <p data-cy="NoMatchingMessage">
+              No products matching selected criteria
+            </p>
+          )}
 
           <table
             data-cy="ProductTable"
